@@ -16,7 +16,7 @@ The EMG signals was recorded with the Mindrove device:
 
 [Github Repo](https://github.com/MindRove/SDK_Public)
 
-I recorded 6 channels with 500hz sampling rate.
+We recorded 6 channels with 500hz sampling rate.
 The electrodes were placed in one line on the subjects forhead.
 
 The expriment contained 5 separated sessions from the same subject, recorded in different times.
