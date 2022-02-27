@@ -5,6 +5,7 @@ from sklearn.preprocessing import StandardScaler
 
 
 def DCFilter(data):
+    #return data - np.mean(data, axis=0)
     new_data = []
     for d in data:
         new_data.append(d - np.mean(d))
@@ -17,25 +18,33 @@ def notchFilter(data, f0=60.0, Q=30.0, fs=500):
     return data
 
 
-def preProcess(data, signal_length):
-
-    data = signal.resample(data, signal_length, axis=-1)
-
+def preProcess(data, input_length):
     new_data = []
     for d in data:
-        d = DCFilter(d)
-        scaler = StandardScaler()
-        scaler.fit(d)
-        d = scaler.transform(d)
-        new_data.append(d)
-        # new_data.append(normalize(d, norm='l2'))
+        new_data.append(preProcess_1(d, input_length))
     return np.array(new_data)
 
 
-def preProcess_1(data, signal_length):
-    d = signal.resample(data, signal_length, axis=-1)
-    d = DCFilter(d)
-    scaler = StandardScaler()
-    scaler.fit(d)
-    d = scaler.transform(d)
+
+def preProcess_buffer(data):
+    d = data.copy()
+    d= DCFilter(d)
+    d = np.clip(d, -1000, 1000)
+    d /= 1000
+    
+    # scaler = StandardScaler()
+    # scaler.fit(d)
+    # d = scaler.transform(d)
+    return np.array(d)
+
+def preProcess_1(data, input_length):
+    d = data.copy()
+    d= DCFilter(d)
+    d = signal.resample(d, input_length, axis=-1)
+    d = np.clip(d, -1000, 1000)
+    d /= 1000
+    
+    # scaler = StandardScaler()
+    # scaler.fit(d)
+    # d = scaler.transform(d)
     return np.array(d)

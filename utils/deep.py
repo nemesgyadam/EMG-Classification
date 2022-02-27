@@ -17,8 +17,8 @@ def notchFilter(data, f0=60.0, Q=30.0, fs=500):
     return np.array(data)
 
 
-def preProcess(data, signal_length):
-    data = signal.resample(data, signal_length, axis=-1)
+def preProcess(data, input_length):
+    data = signal.resample(data, input_length, axis=-1)
 
     new_data = []
     for d in data:
@@ -31,8 +31,8 @@ def preProcess(data, signal_length):
     return np.array(new_data)
 
 
-def preProcess_1(data, signal_length):
-    d = signal.resample(data, signal_length, axis=-1)
+def preProcess_1(data, input_length):
+    d = signal.resample(data, input_length, axis=-1)
     d = DCFilter(d)
     d = notchFilter(d)
     scaler = StandardScaler()
