@@ -22,7 +22,6 @@ def preProcess(data, input_length):
 
     new_data = []
     for d in data:
-        d = DCFilter(d)
         d = notchFilter(d)
         scaler = StandardScaler()
         scaler.fit(d)
@@ -33,7 +32,6 @@ def preProcess(data, input_length):
 
 def preProcess_1(data, input_length):
     d = signal.resample(data, input_length, axis=-1)
-    d = DCFilter(d)
     d = notchFilter(d)
     scaler = StandardScaler()
     scaler.fit(d)

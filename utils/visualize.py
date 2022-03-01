@@ -42,23 +42,6 @@ def showMe2(data, r=None, std_threshold=200):
     plt.show()
 
 
-def getRange(data,std_threshold):
-    middle = 0
-    for i in range(100):
-        std_sum = 0
-        for d in data:
-            std_sum+=np.std(d[:i*10+10])
-        std_avg = std_sum/len(data)
-        if std_avg>std_threshold:
-            middle = i*10+10
-            break
-     #FUCK ME
-    if middle<250:
-        middle = 250
-    if middle>len(data[0])-250:
-        middle = len(data[0])-250
-    return middle-250,middle+250
-
 
 def showMe(data, r=[-1,1]):
     plt.rcParams["figure.figsize"] = [5, 5]
@@ -92,19 +75,6 @@ def showHistory(history):
             except:
                 ...
 
-def stat(data):
-    mins = []
-    maxs = []
-    stds = []
-    for channel in data:
-        mins.append(np.min(channel))
-        maxs.append(np.max(channel))
-        stds.append(np.std(channel))
-    min_mean = round(np.mean(mins),0)
-    max_mean = round(np.mean(maxs),0)
-    std_mean = round(np.mean(stds),0)
-    return min_mean, max_mean, std_mean
-
 
 def visualize(data, cla):
     range = [-400,400]
@@ -135,16 +105,13 @@ def visualize(data, cla):
     #plt.cla()
     plt.show()
 
-def VisAction(dd, std_threshold):
+def VisulaizeCell(dd, std_threshold):
+    """
+    Draw all channels in one figure
+    """
     range = [int(std_threshold*-2), int(std_threshold*2)]
-    print(range[0])
-    #fig = plt.gcf()
-    #fig.canvas.manager.window.raise_()
     data = dd.copy()
-   
-   
     plt.clf()
-    plt.subplot(1, 2, 2)
 
     #############################################################
     min_mean, max_mean, std_mean = stat(data)
@@ -152,7 +119,6 @@ def VisAction(dd, std_threshold):
     plt.text(80, range[1]*1.1, f'|Max: {max_mean}', fontsize=10)
     plt.text(100, range[1]*1.1, f'|Std: {std_mean}', fontsize=10)
     #############################################################
-
     plt.ylim(range)
     
 
