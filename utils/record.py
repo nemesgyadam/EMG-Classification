@@ -25,7 +25,7 @@ def getRange(data,std_threshold, signal_length = 500):
     based on the std theshold
     """
     half = int(signal_length/2)
-    additional_edge4aug = int(std_threshold/10)
+    additional_edge4aug = int(signal_length/10)
     middle = 0
     for i in range(100):
         std_sum = 0
@@ -51,7 +51,7 @@ def preProcess(data, clip_value):
     Clip and resample the data
     """
 
-    data = signal.redata(data, 100, axis = -1)
+    data = signal.resample(data, 100, axis = -1)
 
     data = np.clip(data, -clip_value, clip_value) 
     data /= clip_value
