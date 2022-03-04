@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from joblib import load
 from scipy import signal
@@ -48,3 +49,25 @@ def preProcess_1(data, input_length):
     # scaler.fit(d)
     # d = scaler.transform(d)
     return np.array(d)
+
+
+def evaluate(model, session, resource_path, classes, post_fix, input_length =100):
+    records = {}
+    for c in classes:
+        #print(f"Loading test data from {os.path.join(resource_path,session,c+post_fix+'.npy')}")
+        records[c] = np.load(os.path.join(resource_path,session,c+post_fix+'.npy'),allow_pickle=True)
+    
+   
+    gt = np.arange(len(classes)).repeat(records[c].shape[0])
+    preds = []
+    for  c in classes:
+        sample = records[c].reshape(-1,6*input_length)
+        preds.append(model.predict(sample))
+    
+    preds = np.concatenate(preds, axis = 0)
+        
+    from sklearn.metrics import confusion_matrix
+    from sklearn.metrics import accuracy_score
+    print(f'Accuracy : {round(accuracy_score(gt,preds),2)*100}%')
+    print(confusion_matrix(gt, preds))
+    print()

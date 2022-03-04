@@ -1,6 +1,19 @@
 import numpy as np
 from scipy import signal
 
+
+def GenerateOrder(n_classes, n_samples_per_class = 1):
+    lists = []
+    for i in range(n_classes):
+        tmp = np.empty([n_samples_per_class])
+        tmp.fill(i)
+        lists.append(tmp)
+    order = np.vstack(lists).ravel().astype(np.int32)
+    np.random.shuffle(order)
+    return order
+
+
+
 def stat(data):
     """
     Count the std, max and min of each channel
@@ -36,10 +49,11 @@ def getRange(data,std_threshold, signal_length = 500):
             middle = i*10+10
             break
 
-    ## Handle edge cases
+     
     if middle<half+additional_edge4aug:
-        middle = half+additional_edge4aug
-        
+         middle = signal_length-(half-additional_edge4aug)
+
+         
     if middle>len(data[0])-(half+additional_edge4aug):
         middle = len(data[0])-(half+additional_edge4aug)
 
@@ -50,7 +64,7 @@ def preProcess(data, clip_value):
     """
     Clip and resample the data
     """
-
+    
     data = signal.resample(data, 100, axis = -1)
 
     data = np.clip(data, -clip_value, clip_value) 
