@@ -1,6 +1,11 @@
 from matplotlib import pyplot as plt
 import numpy as np
 
+import sys
+sys.path.append('..')
+
+from utils.record import stat
+
 def showMe2(data, r=None, std_threshold=200):
 
     plt.rcParams["figure.figsize"] = [17, 2]
