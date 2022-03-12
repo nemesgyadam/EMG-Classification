@@ -51,11 +51,11 @@ def preProcess_1(data, input_length):
     return np.array(d)
 
 
-def evaluate(model, session, resource_path, classes, post_fix, input_length =100):
+def evaluate(model, session, classes, post_fix, input_length =100):
     records = {}
     for c in classes:
         #print(f"Loading test data from {os.path.join(resource_path,session,c+post_fix+'.npy')}")
-        records[c] = np.load(os.path.join(resource_path,session,c+post_fix+'.npy'),allow_pickle=True)
+        records[c] = np.load(os.path.join(session,c+post_fix+'.npy'),allow_pickle=True)
     
    
     gt = np.arange(len(classes)).repeat(records[c].shape[0])
