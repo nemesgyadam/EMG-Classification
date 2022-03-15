@@ -1,7 +1,32 @@
-from scipy import signal
+import pandas as pd
 import numpy as np
+import os
+from tqdm.notebook import tqdm
+
+
+from scipy import signal
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import normalize
+from tensorflow.keras.utils import to_categorical
+
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score
+
+def smoothLabels(label, factor = 0.05):
+    label *= (1 - factor)
+    label += (factor / len(label))
+    return label
+
+def oneHot(label, num_classes):
+    label = to_categorical(label,num_classes=num_classes)
+    return smoothLabels(label)
+
+def applyOneHot(data, n_classes):
+    new = []
+    for y in data:
+        new.append(oneHot(y,num_classes=n_classes))
+    return np.array(new)
+
 
 
 def DCFilter(data):
@@ -17,18 +42,16 @@ def notchFilter(data, f0=60.0, Q=30.0, fs=500):
     return np.array(data)
 
 
-def preProcess(data, input_length):
-    data = signal.resample(data, input_length, axis=-1)
+def preProcess(d):
+    d = notchFilter(d,100)
 
-    new_data = []
-    for d in data:
-        d = notchFilter(d)
-        scaler = StandardScaler()
-        scaler.fit(d)
-        d = scaler.transform(d)
-        new_data.append(normalize(d, norm="l2"))
-    return np.array(new_data)
+    scaler = StandardScaler()
+    scaler.fit(d)
+    d = scaler.transform(d)
 
+    #d = normalize(d, norm ='l2')
+    return d
+    
 
 def preProcess_1(data, input_length):
     d = signal.resample(data, input_length, axis=-1)
@@ -37,3 +60,61 @@ def preProcess_1(data, input_length):
     scaler.fit(d)
     d = scaler.transform(d)
     return np.array(d)
+
+
+def evaluate_session(model, session, classes, post_fix, input_length =100, log = False):
+    records = {}
+    for c in classes:
+        #print(f"Loading test data from {os.path.join(resource_path,session,c+post_fix+'.npy')}")
+        records[c] = np.load(os.path.join(session,c+post_fix+'.npy'),allow_pickle=True)
+    
+    
+    gt = np.arange(len(classes)).repeat(records[c].shape[0])
+    #gt = applyOneHot(gt, len(classes))
+   
+    
+    preds = []
+    for c in classes:
+        X = records[c] #.reshape(-1,6*input_length)
+       
+        X = np.array([preProcess(s) for s in X])
+       
+        X = X.reshape((-1, 6, 100, 1))
+       
+        #sample = records[c].reshape(-1,6*input_length)
+        # reshape?
+        pred = np.argmax(model.predict(X), axis=1)
+       
+        
+        preds.append(pred)
+    
+    preds = np.concatenate(preds, axis = 0)
+        
+  
+    accuracy = round(accuracy_score(gt,preds),2)
+    if log:
+        print(f'Accuracy : {accuracy*100}%')
+        print(confusion_matrix(gt, preds))
+        print()
+    return int(accuracy*100)
+
+
+def evaluate_set(model, set, classes, post_fix, input_length = 100, log = False):
+    results  = pd.DataFrame(columns=["Subject", "Session", "Accuracy"])
+    for session in tqdm(set):
+        #print("Evaluating session: {}".format(session))
+        acc = evaluate_session(model, session, classes, post_fix)
+        session = session.replace('\\','/')
+        subject = session.split('/')[-2]
+        session = session.split('/')[-1]
+        results = results.append({
+        "Subject": subject,
+        "Session":  session,
+        "Accuracy": acc
+        }, ignore_index=True)
+        
+    results = results.astype({"Subject": str, "Session": str, "Accuracy": int})   
+    print(f'Global accuracy: {round(results.mean().to_numpy()[0],2)}%')
+    by_subject = results.groupby('Subject').mean()
+    print(by_subject)
+    #return resul

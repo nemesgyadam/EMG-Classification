@@ -60,12 +60,12 @@ def getRange(data,std_threshold, signal_length = 500):
 
     return middle-half,middle+half
 
-def preProcess(data, clip_value):
+def preProcess(data, clip_value, input_length=100):
     """
     Clip and resample the data
     """
     
-    data = signal.resample(data, 100, axis = -1)
+    data = signal.resample(data, input_length, axis = -1)
 
     data = np.clip(data, -clip_value, clip_value) 
     data /= clip_value

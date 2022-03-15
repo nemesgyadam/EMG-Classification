@@ -1,9 +1,14 @@
 import os
 import numpy as np
+import pandas as pd
+from tqdm.notebook import tqdm
+
+
 from joblib import load
 from scipy import signal
 from sklearn.preprocessing import StandardScaler
-
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score
 
 def DCFilter(data):
     #return data - np.mean(data, axis=0)
@@ -51,7 +56,7 @@ def preProcess_1(data, input_length):
     return np.array(d)
 
 
-def evaluate(model, session, classes, post_fix, input_length =100):
+def evaluate_session(model, session, classes, post_fix, input_length =100, log = False):
     records = {}
     for c in classes:
         #print(f"Loading test data from {os.path.join(resource_path,session,c+post_fix+'.npy')}")
@@ -66,8 +71,30 @@ def evaluate(model, session, classes, post_fix, input_length =100):
     
     preds = np.concatenate(preds, axis = 0)
         
-    from sklearn.metrics import confusion_matrix
-    from sklearn.metrics import accuracy_score
-    print(f'Accuracy : {round(accuracy_score(gt,preds),2)*100}%')
-    print(confusion_matrix(gt, preds))
-    print()
+   
+    accuracy = round(accuracy_score(gt,preds),2)
+    if log:
+        print(f'Accuracy : {accuracy*100}%')
+        print(confusion_matrix(gt, preds))
+        print()
+    return int(accuracy*100)
+
+def evaluate_set(model, set, classes, post_fix, input_length = 100, log = False):
+    results  = pd.DataFrame(columns=["Subject", "Session", "Accuracy"])
+    for session in tqdm(set):
+        #print("Evaluating session: {}".format(session))
+        acc = evaluate_session(model, session, classes, post_fix)
+        session = session.replace('\\','/')
+        subject = session.split('/')[-2]
+        session = session.split('/')[-1]
+        results = results.append({
+        "Subject": subject,
+        "Session":  session,
+        "Accuracy": acc
+        }, ignore_index=True)
+        
+    results = results.astype({"Subject": str, "Session": str, "Accuracy": int})   
+    print(f'Global accuracy: {round(results.mean().to_numpy()[0],2)}%')
+    by_subject = results.groupby('Subject').mean()
+    print(by_subject)
+    #return results
