@@ -43,7 +43,7 @@ def notchFilter(data, f0=60.0, Q=30.0, fs=500):
 
 
 def preProcess(d):
-    d = notchFilter(d,100)
+    #d = notchFilter(d,100)
 
     scaler = StandardScaler()
     scaler.fit(d)
@@ -75,12 +75,20 @@ def evaluate_session(model, session, classes, post_fix, input_length =100, log =
     
     preds = []
     for c in classes:
-        X = records[c] #.reshape(-1,6*input_length)
        
-        X = np.array([preProcess(s) for s in X])
-       
-        X = X.reshape((-1, 6, 100, 1))
-       
+        X = records[c]
+    
+        #
+        # clip_value = 2000
+        # X = signal.resample(X, input_length, axis = -1)
+        # X = np.clip(X, -clip_value, clip_value) 
+        # X /= clip_value
+        #X = X.reshape((-1, 6, input_length, 1))
+        X = X.reshape((-1, 4, 500))
+
+        
+        #X = np.array([preProcess(s) for s in X])
+  
         #sample = records[c].reshape(-1,6*input_length)
         # reshape?
         pred = np.argmax(model.predict(X), axis=1)
@@ -90,8 +98,10 @@ def evaluate_session(model, session, classes, post_fix, input_length =100, log =
     
     preds = np.concatenate(preds, axis = 0)
         
-  
+ 
+    print("#"*20)
     accuracy = round(accuracy_score(gt,preds),2)
+
     if log:
         print(f'Accuracy : {accuracy*100}%')
         print(confusion_matrix(gt, preds))
@@ -103,7 +113,7 @@ def evaluate_set(model, set, classes, post_fix, input_length = 100, log = False)
     results  = pd.DataFrame(columns=["Subject", "Session", "Accuracy"])
     for session in tqdm(set):
         #print("Evaluating session: {}".format(session))
-        acc = evaluate_session(model, session, classes, post_fix)
+        acc = evaluate_session(model, session, classes, post_fix,input_length=input_length,  log = log)
         session = session.replace('\\','/')
         subject = session.split('/')[-2]
         session = session.split('/')[-1]
