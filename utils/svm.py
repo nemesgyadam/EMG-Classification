@@ -121,7 +121,7 @@ def evaluate_session(model, session, classes, post_fix, input_length =100, log =
 
         #sample = np.array([cut_out(s) for s in records[c]])
         if records[c].shape[0] == 0:
-            print('No data for class {}'.format(c))
+            #print('No data for class {}'.format(c))
             preds.append([])
         else:
             sample = records[c].reshape(-1,records[c].shape[-2]*records[c].shape[-1])

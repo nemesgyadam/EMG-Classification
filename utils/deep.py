@@ -85,7 +85,7 @@ def evaluate_session(model, session, classes, post_fix, input_length =100, log =
        
         X = records[c]
         if X.shape[0] == 0:
-            print('No data for class {}'.format(c))
+            #print('No data for class {}'.format(c))
             preds.append([])
         else:
             X = X.reshape((-1, 4, 500))
