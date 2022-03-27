@@ -61,6 +61,13 @@ def preProcess_1(data, input_length):
     d = scaler.transform(d)
     return np.array(d)
 
+def create_labels(X):
+    y = []
+    for i, r in enumerate(X):
+        l = np.ones(X[r].shape[0])*i
+        y = y + l.tolist()
+    y = np.array(y)
+    return y
 
 def evaluate_session(model, session, classes, post_fix, input_length =100, log = False):
     records = {}
@@ -69,7 +76,7 @@ def evaluate_session(model, session, classes, post_fix, input_length =100, log =
         records[c] = np.load(os.path.join(session,c+post_fix+'.npy'),allow_pickle=True)
     
     
-    gt = np.arange(len(classes)).repeat(records[c].shape[0])
+    gt = create_labels(records)
     #gt = applyOneHot(gt, len(classes))
    
     
@@ -77,29 +84,20 @@ def evaluate_session(model, session, classes, post_fix, input_length =100, log =
     for c in classes:
        
         X = records[c]
-    
-        #
-        # clip_value = 2000
-        # X = signal.resample(X, input_length, axis = -1)
-        # X = np.clip(X, -clip_value, clip_value) 
-        # X /= clip_value
-        #X = X.reshape((-1, 6, input_length, 1))
-        X = X.reshape((-1, 4, 500))
+        if X.shape[0] == 0:
+            print('No data for class {}'.format(c))
+            preds.append([])
+        else:
+            X = X.reshape((-1, 4, 500))
 
+            pred = np.argmax(model.predict(X), axis=1)
         
-        #X = np.array([preProcess(s) for s in X])
-  
-        #sample = records[c].reshape(-1,6*input_length)
-        # reshape?
-        pred = np.argmax(model.predict(X), axis=1)
-       
-        
-        preds.append(pred)
+            
+            preds.append(pred)
     
     preds = np.concatenate(preds, axis = 0)
         
  
-    print("#"*20)
     accuracy = round(accuracy_score(gt,preds),2)
 
     if log:
