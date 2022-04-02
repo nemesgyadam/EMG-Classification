@@ -77,27 +77,24 @@ def evaluate_session(model, session, classes, post_fix, input_length =100, log =
     
     
     gt = create_labels(records)
+    
     #gt = applyOneHot(gt, len(classes))
    
     
     preds = []
     for c in classes:
-       
+        
         X = records[c]
         if X.shape[0] == 0:
             #print('No data for class {}'.format(c))
             preds.append([])
         else:
             X = X.reshape((-1, 4, 500))
-
             pred = np.argmax(model.predict(X), axis=1)
-        
-            
             preds.append(pred)
     
     preds = np.concatenate(preds, axis = 0)
-        
- 
+
     accuracy = round(accuracy_score(gt,preds),2)
 
     if log:
