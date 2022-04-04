@@ -30,7 +30,7 @@ commands = {
     #     }),
     "left" : roslibpy.Message({
         'linear':{'x': 0, 'y': 0.0, 'z': 0.0},
-        'angular': {'x': 0, 'y': 0.0, 'z': 0.85}
+        'angular': {'x': 0, 'y': 0.0, 'z': 0.8}
         }),
     "right" : roslibpy.Message({
         'linear':{'x': 0, 'y': 0.0, 'z': 0.0},

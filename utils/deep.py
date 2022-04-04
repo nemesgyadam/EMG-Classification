@@ -123,3 +123,25 @@ def evaluate_set(model, set, classes, post_fix, input_length = 100, log = False)
     by_subject = results.groupby('Subject').mean()
     print(by_subject)
     #return resul
+
+def m2tex(model):
+    stringlist = []
+    model.summary(line_length=70, print_fn=lambda x: stringlist.append(x))
+    del stringlist[1:-4:2]
+    del stringlist[-1]
+    for ix in range(1,len(stringlist)-3):
+        tmp = stringlist[ix]
+        stringlist[ix] = tmp[0:31]+"& "+tmp[31:59]+"& "+tmp[59:]+"\\\\ \hline"
+    stringlist[0] = "Model: test \\\\ \hline"
+    stringlist[1] = stringlist[1]+" \hline"
+    stringlist[-4] = stringlist[-4]+" \hline"
+    stringlist[-3] = stringlist[-3]+" \\\\"
+    stringlist[-2] = stringlist[-2]+" \\\\"
+    stringlist[-1] = stringlist[-1]+" \\\\ \hline"
+    prefix = ["\\begin{table}[]", "\\begin{tabular}{lll}"]
+    suffix = ["\end{tabular}", "\caption{Model summary for test.}", "\label{tab:model-summary}" , "\end{table}"]
+    stringlist = prefix + stringlist + suffix 
+    out_str = " \n".join(stringlist)
+    out_str = out_str.replace("_", "\_")
+    out_str = out_str.replace("#", "\#")
+    print(out_str)

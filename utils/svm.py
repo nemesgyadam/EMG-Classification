@@ -152,10 +152,11 @@ def evaluate_set(model, set, classes, post_fix, input_length = 100, log = False)
         }, ignore_index=True)
         
     results = results.astype({"Subject": str, "Session": str, "Accuracy": int})   
-    print(f'Global accuracy: {round(results.mean().to_numpy()[0],2)}%')
-    by_subject = results.groupby('Subject').mean()
-    print(by_subject)
-    #return result
+    if log:
+        print(f'Global accuracy: {round(results.mean().to_numpy()[0],2)}%')
+        by_subject = results.groupby('Subject').mean()
+        print(by_subject)
+    return results
 
 
 
