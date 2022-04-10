@@ -12,6 +12,19 @@ from tensorflow.keras.utils import to_categorical
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import accuracy_score
 
+
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.models import Sequential
+from tensorflow.keras import layers as layers
+from tensorflow.keras.layers import GlobalMaxPooling2D, Activation, Dense, Conv1D, Conv2D, Dropout, Flatten, MaxPooling2D, BatchNormalization, GlobalMaxPooling1D
+from tensorflow.keras import optimizers
+
+from tensorflow.keras import regularizers
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+
+
 def smoothLabels(label, factor = 0.05):
     label *= (1 - factor)
     label += (factor / len(label))
@@ -96,19 +109,23 @@ def evaluate_session(model, session, classes, post_fix, input_length =100, log =
     preds = np.concatenate(preds, axis = 0)
 
     accuracy = round(accuracy_score(gt,preds),2)
-
+    cm = confusion_matrix(gt,preds)
     if log:
         print(f'Accuracy : {accuracy*100}%')
         print(confusion_matrix(gt, preds))
         print()
-    return int(accuracy*100)
+    return int(accuracy*100), cm
 
 
 def evaluate_set(model, set, classes, post_fix, input_length = 100, log = False):
     results  = pd.DataFrame(columns=["Subject", "Session", "Accuracy"])
+    confusion_matrixes = {}
+
+
     for session in tqdm(set):
+        full_session_name =session
         #print("Evaluating session: {}".format(session))
-        acc = evaluate_session(model, session, classes, post_fix,input_length=input_length,  log = log)
+        acc, c_m = evaluate_session(model, session, classes, post_fix,input_length=input_length,  log = log)
         session = session.replace('\\','/')
         subject = session.split('/')[-2]
         session = session.split('/')[-1]
@@ -117,12 +134,15 @@ def evaluate_set(model, set, classes, post_fix, input_length = 100, log = False)
         "Session":  session,
         "Accuracy": acc
         }, ignore_index=True)
+        confusion_matrixes[full_session_name] = c_m
         
     results = results.astype({"Subject": str, "Session": str, "Accuracy": int})   
-    print(f'Global accuracy: {round(results.mean().to_numpy()[0],2)}%')
-    by_subject = results.groupby('Subject').mean()
-    print(by_subject)
-    #return resul
+    if log:
+        print(f'Global accuracy: {round(results.mean().to_numpy()[0],2)}%')
+        by_subject = results.groupby('Subject').mean()
+        print(by_subject)
+    return results, confusion_matrixes
+
 
 def m2tex(model):
     stringlist = []
@@ -145,3 +165,41 @@ def m2tex(model):
     out_str = out_str.replace("_", "\_")
     out_str = out_str.replace("#", "\#")
     print(out_str)
+
+def get_model(input_shape, n_classes):
+    inspected_chanels= input_shape[0]
+    input_length=     input_shape[1]
+    l2 = 0.000001
+
+    input_layer = keras.Input(shape = (inspected_chanels,input_length,1), name='input')
+
+    x     = layers.AveragePooling2D(pool_size=(1,5))(input_layer) # resample
+
+
+   
+   
+    x     = layers.Conv2D(256, kernel_size=(1,5), padding='same', activation='relu', kernel_regularizer=regularizers.l2(l2))(x)
+    x     = layers.BatchNormalization()(x)
+    x     = layers.AveragePooling2D(pool_size=(1,5))(x)
+
+    x     = layers.Conv2D(64, kernel_size=(4,1), padding='same', activation='relu', kernel_regularizer=regularizers.l2(l2))(x)
+    x     = layers.BatchNormalization()(x)
+    x     = layers.AveragePooling2D(pool_size=(4,1))(x)
+
+    x     = layers.Dense(100,kernel_regularizer=regularizers.l2(l2))(x)
+    x     = layers.Flatten()(x)
+
+ 
+   
+    x     = layers.Dense(20,kernel_regularizer=regularizers.l2(l2))(x)
+    x     = layers.BatchNormalization()(x)
+    x     = layers.Dropout(.1)(x)
+
+    
+
+
+    output = layers.Dense(n_classes, activation='softmax')(x)
+    model = keras.Model(inputs=input_layer, outputs=output)
+
+
+    return model

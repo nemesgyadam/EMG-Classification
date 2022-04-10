@@ -96,10 +96,14 @@ def cut_out(data,
 
 
         return data[:,int(start):int(end)]
+
 def create_labels(X):
     y = []
     for i, r in enumerate(X):
-        l = np.ones(X[r].shape[0])*i
+        if X[r].shape[0] == 0:
+            l = np.array([0])
+        else:
+            l = np.ones(X[r].shape[0])*i
         y = y + l.tolist()
     y = np.array(y)
     return y
@@ -122,41 +126,49 @@ def evaluate_session(model, session, classes, post_fix, input_length =100, log =
         #sample = np.array([cut_out(s) for s in records[c]])
         if records[c].shape[0] == 0:
             #print('No data for class {}'.format(c))
-            preds.append([])
+            ######   ITT VAGYOK
+            preds.append([0])
         else:
             sample = records[c].reshape(-1,records[c].shape[-2]*records[c].shape[-1])
+            #input(model.predict(sample))
             preds.append(model.predict(sample))
     
     preds = np.concatenate(preds, axis = 0)
         
    
     accuracy = round(accuracy_score(gt,preds),2)
+    cm = confusion_matrix(gt,preds)
     if log:
         print(f'Accuracy : {accuracy*100}%')
         print(confusion_matrix(gt, preds))
         print()
-    return int(accuracy*100)
+    return int(accuracy*100), cm
 
 def evaluate_set(model, set, classes, post_fix, input_length = 100, log = False):
     results  = pd.DataFrame(columns=["Subject", "Session", "Accuracy"])
+    confusion_matrixes = {}
+    
     for session in tqdm(set):
+        full_session_name =session
         #print("Evaluating session: {}".format(session))
-        acc = evaluate_session(model, session, classes, post_fix, log=log)
+        acc, c_m = evaluate_session(model, session, classes, post_fix, log=log)
         session = session.replace('\\','/')
         subject = session.split('/')[-2]
         session = session.split('/')[-1]
+
         results = results.append({
         "Subject": subject,
         "Session":  session,
         "Accuracy": acc
         }, ignore_index=True)
+        confusion_matrixes[full_session_name] = c_m
         
     results = results.astype({"Subject": str, "Session": str, "Accuracy": int})   
     if log:
         print(f'Global accuracy: {round(results.mean().to_numpy()[0],2)}%')
         by_subject = results.groupby('Subject').mean()
         print(by_subject)
-    return results
+    return results, confusion_matrixes
 
 
 
